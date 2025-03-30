@@ -18,8 +18,8 @@ struct settingView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            /*.navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)*/
         }
     }
 }

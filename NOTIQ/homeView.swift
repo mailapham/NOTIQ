@@ -1,26 +1,25 @@
 //
-//  mapView.swift
+//  homeView.swift
 //  NOTIQ
 //
-//  Created by Maila Pham on 3/27/25.
+//  Created by Maila Pham on 3/28/25.
 //
 
 import SwiftUI
 
-struct mapView: View {
+struct homeView: View {
     @ObservedObject var RemindInfo: remindInfo
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack {
-                    Text("This page is for the map")
+                    Text("This is the home page")
                 }
                 .padding()
             }
-            /*.navigationTitle("Navigation")
+            /*.navigationTitle("Home")
             .navigationBarTitleDisplayMode(.inline)*/
         }
     }
 }
-

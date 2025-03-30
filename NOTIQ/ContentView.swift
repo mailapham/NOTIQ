@@ -11,7 +11,18 @@ struct ContentView: View {
     @StateObject var RemindInfo = remindInfo()
     
     var body: some View {
+            Text("NOTIQ")
+            .foregroundColor(.gray)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 5)
+            Divider()
+            .padding(.horizontal, 20)
         TabView {
+            homeView(RemindInfo: RemindInfo)
+                .tabItem {
+                    Label("Alerts", systemImage: "exclamationmark.bubble")
+                }
             remindView(RemindInfo: RemindInfo)
                 .tabItem {
                     Label("TO-DO", systemImage: "list.bullet")

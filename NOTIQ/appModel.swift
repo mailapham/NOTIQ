@@ -8,6 +8,49 @@
 import Foundation
 import UIKit
 import SwiftUICore
+// import Firebase
+import MapKit
+
+// struct for reminder functionalities
+struct remindModel: Identifiable, Comparable {
+    let id = UUID()
+    var title: String
+    var course: String
+    var description: String
+    var dueDate: Date
+    var location: String?
+    var isFlagged: Bool
+    var isCompleted: Bool
+
+    // sorting logic - flagged tasks first, then by due date
+    static func < (lhs: remindModel, rhs: remindModel) -> Bool {
+        if lhs.isFlagged != rhs.isFlagged {
+            return lhs.isFlagged
+        }
+        return lhs.dueDate < rhs.dueDate
+    }
+}
+
+// struct for event functionalities
+struct eventModel: Identifiable, Comparable {
+    var id = UUID()
+    var title: String
+    var description: String
+    var date: Date
+    var location: String?
+    var isFlagged: Bool
+    var isAllDay: Bool
+    var startDate: Date? 
+    var endDate: Date?
+    
+    // sorting logic - flagged tasks first, then by due date
+    static func < (lhs: eventModel, rhs: eventModel) -> Bool {
+        if lhs.isFlagged != rhs.isFlagged {
+            return lhs.isFlagged
+        }
+        return lhs.date < rhs.date
+    }
+}
 
 // allows for custom colors - specifically just for UI in ContentView
 extension UIColor {

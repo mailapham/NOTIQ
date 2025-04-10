@@ -14,12 +14,12 @@ struct remindView: View {
     @State private var taskToDelete: remindModel?
     @State private var showDeleteAlert = false
     @State private var showingAddTaskSheet = false
-    @State private var taskToEdit: remindModel? 
+    @State private var taskToEdit: remindModel?
     
     var body: some View {
         NavigationView {
             VStack {
-                if RemindInfo.tasks.isEmpty {
+                if RemindInfo.tasks.isEmpty && RemindInfo.completedTasks.isEmpty {
                     Text("No Tasks")
                         .font(.title)
                         .foregroundColor(.gray)
@@ -27,33 +27,73 @@ struct remindView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else {
                     List {
-                        ForEach(RemindInfo.tasks) { task in
-                            RemindRowView(task: task, isDeleting: $isDeleting, onDelete: {
-                                taskToDelete = task
-                                showDeleteAlert = true
-                            }, onEdit: {
-                                taskToEdit = task
-                                showingAddTaskSheet = true
-                            })
-                            .swipeActions { 
-                                Button(role: .destructive, action: {
-                                    taskToDelete = task
-                                    showDeleteAlert = true
-                                }) {
-                                    Label("Delete", systemImage: "trash.fill")
-                                }
-                                .tint(.red)
+                        // section for current tasks
+                        if !RemindInfo.tasks.isEmpty {
+                            Section(header: Text("Tasks")) {
+                                ForEach(RemindInfo.tasks) { task in
+                                    RemindRowView(task: task, isDeleting: $isDeleting, onDelete: {
+                                        taskToDelete = task
+                                        showDeleteAlert = true
+                                    }, onEdit: {
+                                        taskToEdit = task
+                                        showingAddTaskSheet = true
+                                    }, onToggleComplete: {
+                                        RemindInfo.markTaskAsDone(task: task)
+                                    })
+                                    .swipeActions {
+                                        Button(role: .destructive, action: {
+                                            taskToDelete = task
+                                            showDeleteAlert = true
+                                        }) {
+                                            Label("Delete", systemImage: "trash.fill")
+                                        }
+                                        .tint(.red)
 
-                                Button(action: {
-                                    taskToEdit = task
-                                    showingAddTaskSheet = true
-                                }) {
-                                    Label("Edit", systemImage: "pencil")
+                                        Button(action: {
+                                            taskToEdit = task
+                                            showingAddTaskSheet = true
+                                        }) {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(.blue)
+                                    }
                                 }
-                                .tint(.blue)
                             }
                         }
-                        .onDelete(perform: deleteTask)
+                        
+                        // section for completedTasks
+                        if !RemindInfo.completedTasks.isEmpty {
+                            Section(header: Text("Completed Tasks")) {
+                                ForEach(RemindInfo.completedTasks) { task in
+                                    RemindRowView(task: task, isDeleting: $isDeleting, onDelete: {
+                                        taskToDelete = task
+                                        showDeleteAlert = true
+                                    }, onEdit: {
+                                        taskToEdit = task
+                                        showingAddTaskSheet = true
+                                    }, onToggleComplete: {
+                                        RemindInfo.markTaskAsUndone(task: task)
+                                    })
+                                    .swipeActions {
+                                        Button(role: .destructive, action: {
+                                            taskToDelete = task
+                                            showDeleteAlert = true
+                                        }) {
+                                            Label("Delete", systemImage: "trash.fill")
+                                        }
+                                        .tint(.red)
+
+                                        Button(action: {
+                                            taskToEdit = task
+                                            showingAddTaskSheet = true
+                                        }) {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(.blue)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -71,8 +111,6 @@ struct remindView: View {
                 .padding(.horizontal)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            /*.navigationTitle("TO-DO")
-            .navigationBarTitleDisplayMode(.inline)*/
             .alert("Deleting Task", isPresented: $showDeleteAlert, actions: {
                 Button("Cancel", role: .cancel) {}
                 Button("OK", role: .destructive) {
@@ -105,28 +143,39 @@ struct RemindRowView: View {
     @Binding var isDeleting: Bool
     let onDelete: () -> Void
     let onEdit: () -> Void
+    let onToggleComplete: () -> Void
     
     var body: some View {
         HStack {
+            Button(action: onToggleComplete) {
+                Image(systemName: task.isCompleted ? "circle.fill" : "circle")
+                    .foregroundColor(task.isCompleted ? Color(UIColor(hex: "#FCD12A")) : .gray)
+                    .font(.system(size: 22))
+            }
+            .buttonStyle(BorderlessButtonStyle())
+            .padding(.trailing, 5)
+            
             VStack(alignment: .leading) {
                 Text(task.title)
                     .font(.headline)
+                    .foregroundColor(task.isCompleted ? .gray : .primary)
                 
                 Text(task.course)
                     .font(.subheadline)
+                    .foregroundColor(task.isCompleted ? .gray : .primary)
                 
                 Text(task.description)
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(task.isCompleted ? .gray : .gray)
                 
                 Text("Due: \(task.dueDate, style: .date) at \(task.dueDate, style: .time)")
                     .font(.subheadline)
-                    .foregroundColor(isOverdue() ? .red : .gray)
+                    .foregroundColor(task.isCompleted ? .gray : (isOverdue() ? .red : .gray))
                 
                 if let location = task.location {
                     Text("Location: \(location)")
                         .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .foregroundColor(task.isCompleted ? .gray : .gray)
                 }
             }
             
@@ -134,18 +183,13 @@ struct RemindRowView: View {
             
             if task.isFlagged {
                 Image(systemName: "flag.fill")
-                    .foregroundColor(.red)
+                    .foregroundColor(task.isCompleted ? .gray : .red)
             }
-            
-            /*if isOverdue() {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.red)
-            }*/
         }
     }
     
     private func isOverdue() -> Bool {
-        return task.dueDate < Date()
+        return !task.isCompleted && task.dueDate < Date()
     }
     
     private func formattedDate() -> String {

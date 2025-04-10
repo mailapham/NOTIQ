@@ -20,7 +20,7 @@ struct addEvent: View {
     @State private var isAllDay = false
 
     @State private var startDate = Date()
-    @State private var endDate = Date()
+    @State private var endDate = Date().addingTimeInterval(3600)
 
     @FocusState private var isDatePickerActive: Bool
     @FocusState private var isStartTimePickerActive: Bool
@@ -45,13 +45,29 @@ struct addEvent: View {
                             Text("All Day")
                         }
                     }
+                    .onChange(of: isAllDay) { _, newValue in
+                        // switching to an all-day event
+                        if newValue {
+                            let calendar = Calendar.current
+                            startDate = calendar.startOfDay(for: startDate)
+                            endDate = calendar.startOfDay(for: startDate)
+                        // switching to a specific timed event
+                        } else {
+                            endDate = startDate.addingTimeInterval(3600)
+                        }
+                    }
 
+                    // all-day event: showing date picker without the time displayed
                     if isAllDay {
                         DatePicker("Event Date", selection: $startDate, displayedComponents: [.date])
-                            .datePickerStyle(.wheel)
+                            .datePickerStyle(.graphical)
                             .labelsHidden()
                             .focused($isDatePickerActive)
                             .frame(maxWidth: .infinity, alignment: .trailing)
+                            .onChange(of: startDate) { _, newValue in
+                                endDate = newValue
+                            }
+                    // specified time event: show start/end date pickers
                     } else {
                         HStack {
                             Text("Starts")
@@ -60,15 +76,20 @@ struct addEvent: View {
                                 .labelsHidden()
                                 .focused($isStartTimePickerActive)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
+                                .onChange(of: startDate) { _, newValue in
+                                    // ensure end date is always after start date
+                                    if endDate <= newValue {
+                                        endDate = newValue.addingTimeInterval(3600)
+                                    }
+                                }
                         }
 
                         HStack {
                             Text("Ends")
-                            DatePicker("End Date and Time", selection: $endDate, displayedComponents: [.date, .hourAndMinute])
+                            DatePicker("End Date and Time", selection: $endDate, in: startDate..., displayedComponents: [.date, .hourAndMinute])
                                 .datePickerStyle(.compact)
                                 .labelsHidden()
                                 .focused($isEndTimePickerActive)
-                                .disabled(startDate >= endDate && startDate != endDate) // Prevent end date from being before start date
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
@@ -112,27 +133,27 @@ struct addEvent: View {
                             addEvent()
                         }
                     }
-                    .disabled(title.isEmpty || startDate == Date())
+                    .disabled(title.isEmpty)
                 }
             }
             .onAppear {
+                // editing an existing event, populate current fields
                 if let event = eventToEdit {
                     title = event.title
                     description = event.description
                     location = event.location ?? ""
                     isFlagged = event.isFlagged
-                    startDate = event.startDate ?? event.date
-                    endDate = event.endDate ?? event.date
-                    isAllDay = startDate == endDate
+                    isAllDay = event.isAllDay
+                    
+                    if isAllDay {
+                        startDate = event.date
+                        endDate = event.date
+                    } else {
+                        startDate = event.startDate ?? event.date
+                        endDate = event.endDate ?? event.date.addingTimeInterval(3600)
+                    }
+                    
                     hasLocation = event.location != nil
-                }
-            }
-            .task {
-                // all-day toggle logic
-                if startDate == endDate {
-                    isAllDay = true
-                } else {
-                    isAllDay = false
                 }
             }
         }
@@ -142,7 +163,7 @@ struct addEvent: View {
         RemindInfo.addEvent(
             title: title,
             description: description,
-            date: startDate, // default for all-day
+            date: isAllDay ? startDate : startDate,
             location: hasLocation ? location : nil,
             isFlagged: isFlagged,
             isAllDay: isAllDay,
@@ -157,7 +178,7 @@ struct addEvent: View {
             id: existingEvent.id,
             title: title,
             description: description,
-            date: startDate,
+            date: isAllDay ? startDate : startDate,
             location: hasLocation ? location : nil,
             isFlagged: isFlagged,
             isAllDay: isAllDay,

@@ -35,134 +35,206 @@ struct calendarView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
-                HStack {
-                    Button(action: {
-                        selectedDate = calendar.date(byAdding: .month, value: -1, to: selectedDate) ?? Date()
-                        updateTasksAndEventsForSelectedDate()
-                    }) {
-                        Image(systemName: "chevron.left.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                    
-                    Text("\(selectedDate, formatter: monthFormatter)")
-                        .font(.title)
-                        .bold()
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        selectedDate = calendar.date(byAdding: .month, value: 1, to: selectedDate) ?? Date()
-                        updateTasksAndEventsForSelectedDate()
-                    }) {
-                        Image(systemName: "chevron.right.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding()
-                
-                // weekday headers - fixed to use unique IDs
-                HStack {
-                    ForEach(weekdays, id: \.id) { day in
-                        Text(day.label)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .font(.headline)
-                .padding(.bottom, 5)
-                
-                // calendar grid - using unique IDs
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
-                    ForEach(getDaysInMonth(), id: \.id) { day in
-                        VStack {
-                            if let date = day.date {
-                                Text("\(calendar.component(.day, from: date))")
-                                    .font(.subheadline)
-                                    .padding(5)
-                                    .foregroundColor(
-                                        calendar.isDate(date, inSameDayAs: Date()) ? Color.red : Color.black
-                                    )
-                                    .background(
-                                        calendar.isDate(date, inSameDayAs: selectedDate) ? Color.white : Color.clear
-                                    )
-                                    .cornerRadius(8)
-                                    .onTapGesture {
-                                        selectedDate = date
-                                        updateTasksAndEventsForSelectedDate()
-                                    }
-
-                                // create a marker if there is an event/task
-                                if eventsOnDate(date) || tasksOnDate(date) {
-                                    Circle()
-                                        .fill(Color.blue)
-                                        .frame(width: 6, height: 6)
-                                        .padding(.top, 4)
-                                }
-                            } else {
-                                Text("")
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // calendar header
+                        HStack {
+                            Button(action: {
+                                selectedDate = calendar.date(byAdding: .month, value: -1, to: selectedDate) ?? Date()
+                                updateTasksAndEventsForSelectedDate()
+                            }) {
+                                Image(systemName: "chevron.left.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Spacer()
+                            
+                            Text("\(selectedDate, formatter: monthFormatter)")
+                                .font(.title)
+                                .bold()
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                selectedDate = calendar.date(byAdding: .month, value: 1, to: selectedDate) ?? Date()
+                                updateTasksAndEventsForSelectedDate()
+                            }) {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
                             }
                         }
-                    }
-                }
-                .padding(.bottom)
-
-                // display the events and tasks for a selected date
-                if eventsForSelectedDate.isEmpty && tasksForSelectedDate.isEmpty {
-                    Text("No Events or Tasks")
-                        .font(.title)
-                        .foregroundColor(.gray)
                         .padding()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                } else {
-                    List {
-                        // section for events
-                        if !eventsForSelectedDate.isEmpty {
-                            Section(header: Text("Events")) {
-                                ForEach(eventsForSelectedDate) { event in
-                                    EventRowView(event: event, isDeleting: $isDeleting, onDelete: {
-                                        eventToDelete = event
-                                        showDeleteAlert = true
-                                    }, onEdit: {
-                                        eventToEdit = event
-                                        showingAddEventSheet = true
-                                    })
-                                    .swipeActions {
-                                        Button(role: .destructive, action: {
-                                            eventToDelete = event
-                                            showDeleteAlert = true
-                                        }) {
-                                            Label("Delete", systemImage: "trash.fill")
-                                        }
-                                        .tint(.red)
-
+                        
+                        // weekday headers
+                        HStack {
+                            ForEach(weekdays, id: \.id) { day in
+                                Text(day.label)
+                                    .frame(maxWidth: .infinity)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        .font(.headline)
+                        .padding(.bottom, 5)
+                        .padding(.horizontal)
+                        
+                        // calendar grid
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
+                            ForEach(getDaysInMonth(), id: \.id) { day in
+                                VStack {
+                                    if let date = day.date {
                                         Button(action: {
-                                            eventToEdit = event
-                                            showingAddEventSheet = true
+                                            selectedDate = date
+                                            updateTasksAndEventsForSelectedDate()
                                         }) {
-                                            Label("Edit", systemImage: "pencil")
+                                            VStack {
+                                                Text("\(calendar.component(.day, from: date))")
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(
+                                                        calendar.isDate(date, inSameDayAs: Date()) ?
+                                                        Color.red :
+                                                        (calendar.isDate(date, inSameDayAs: selectedDate) ?
+                                                         Color.white : Color.primary)
+                                                    )
+                                                    .frame(width: 35, height: 35)
+                                                    .background(
+                                                        calendar.isDate(date, inSameDayAs: selectedDate) ?
+                                                        Circle().fill(Color(hex: "#3C5E95")) :
+                                                        Circle().fill(Color.clear)
+                                                    )
+                                                
+                                                // event/task indicator dot
+                                                if eventsOnDate(date) || tasksOnDate(date) {
+                                                    Circle()
+                                                        .fill(
+                                                            eventsOnDate(date) && tasksOnDate(date) ?
+                                                            Color.purple : (eventsOnDate(date) ?
+                                                                          Color(hex: "#3C5E95") :
+                                                                          Color(hex: "#FCD12A"))
+                                                        )
+                                                        .frame(width: 6, height: 6)
+                                                } else {
+                                                    Circle()
+                                                        .fill(Color.clear)
+                                                        .frame(width: 6, height: 6)
+                                                }
+                                            }
                                         }
-                                        .tint(.blue)
+                                    } else {
+                                        Text("")
+                                            .frame(width: 35, height: 35)
+                                        Spacer()
+                                            .frame(height: 6)
                                     }
                                 }
                             }
                         }
+                        .padding([.horizontal, .bottom])
                         
-                        // section for tasks
-                        if !tasksForSelectedDate.isEmpty {
-                            Section(header: Text("Tasks")) {
+                        Divider()
+                        
+                        // selected date header
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("\(selectedDate, formatter: dayFormatter)")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                                
+                                Text("\(eventsForSelectedDate.count) Events, \(tasksForSelectedDate.count) Tasks")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        
+                        // display events and tasks for selected date
+                        if eventsForSelectedDate.isEmpty && tasksForSelectedDate.isEmpty {
+                            VStack(spacing: 20) {
+                                Image(systemName: "calendar.badge.exclamationmark")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 30)
+                                
+                                Text("No Events or Tasks")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                                
+                                Text("Nothing scheduled for this day")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
+                            .frame(height: 300)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 100)
+                        } else {
+                            // events section
+                            if !eventsForSelectedDate.isEmpty {
+                                Text("Events")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .padding(.horizontal)
+                                    .padding(.top)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                            
+                                List {
+                                    ForEach(eventsForSelectedDate) { event in
+                                        eventCard(event: event)
+                                            .listRowInsets(EdgeInsets())
+                                            .listRowSeparator(.hidden)
+                                            .padding(.vertical, 4)
+                                            .swipeActions {
+                                                Button(role: .destructive, action: {
+                                                    eventToDelete = event
+                                                    showDeleteAlert = true
+                                                }) {
+                                                    Label("Delete", systemImage: "trash.fill")
+                                                }
+                                                    Button(action: {
+                                                        eventToEdit = event
+                                                        showingAddEventSheet = true
+                                                }) {
+                                                    Label("Edit", systemImage: "pencil")
+                                                }
+                                                .tint(.blue)
+                                            }
+                                    }
+                                    .listRowBackground(Color.clear)
+                                }
+                                .listStyle(PlainListStyle())
+                                .frame(height: min(CGFloat(eventsForSelectedDate.count) * 120, 300))
+                            }
+
+                            // tasks section
+                            if !tasksForSelectedDate.isEmpty {
+                                if !eventsForSelectedDate.isEmpty {
+                                    Divider()
+                                        .padding(.vertical, 10)
+                                }
+                                
+                                Text("Tasks")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .padding(.horizontal)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
                                 ForEach(tasksForSelectedDate) { task in
-                                    CalendarTaskRowView(task: task, onToggleComplete: {})
+                                    taskCard(task: task)
                                 }
                             }
+                            
+                            Spacer()
+                                .frame(height: 100)
                         }
                     }
                 }
                 
-                // adding and deleting events, editing privileges
+                // add event button
                 HStack {
                     Button(action: {
                         eventToEdit = nil
@@ -192,27 +264,179 @@ struct calendarView: View {
             .sheet(isPresented: $showingAddEventSheet) {
                 addEvent(RemindInfo: RemindInfo, eventToEdit: eventToEdit)
             }
-            .background(Color(UIColor.systemGray6))
-            .navigationBarTitle("Calendar", displayMode: .inline)
             .onChange(of: selectedDate) { _, _ in
                 updateTasksAndEventsForSelectedDate()
             }
-        }
-        .onAppear {
-            updateTasksAndEventsForSelectedDate()
+            .onAppear {
+                updateTasksAndEventsForSelectedDate()
+            }
         }
     }
     
-    private func toggleTaskCompletion(_ task: remindModel) {
-        if task.isCompleted {
-            RemindInfo.markTaskAsUndone(task: task)
-        } else {
-            RemindInfo.markTaskAsDone(task: task)
+    // event card view
+    private func eventCard(event: eventModel) -> some View {
+        Button(action: {
+            eventToEdit = event
+            showingAddEventSheet = true
+        }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundColor(Color(hex: "#3C5E95"))
+                            .font(.system(size: 16))
+                        
+                        Text(event.title)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        if event.isFlagged {
+                            Image(systemName: "flag.fill")
+                                .foregroundColor(.red)
+                                .font(.system(size: 12))
+                        }
+                    }
+                    
+                    if !event.description.isEmpty {
+                        Text(event.description)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .lineLimit(2)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "clock")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        
+                        if event.isAllDay {
+                            Text("All day")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        } else if let start = event.startDate, let end = event.endDate {
+                            Text("\(formatTime(start)) - \(formatTime(end))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        } else {
+                            Text(formatTime(event.date))
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
+                    if let location = event.location, !location.isEmpty {
+                        HStack {
+                            Image(systemName: "mappin.and.ellipse")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(10)
+            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+            .padding(.horizontal)
         }
-        updateTasksAndEventsForSelectedDate()
+        .buttonStyle(PlainButtonStyle())
     }
     
-    // day structure to ensure unique IDs
+    // task card view
+    private func taskCard(task: remindModel) -> some View {
+        HStack {
+            Button(action: {
+                if task.isCompleted {
+                    RemindInfo.markTaskAsUndone(task: task)
+                } else {
+                    RemindInfo.markTaskAsDone(task: task)
+                }
+                updateTasksAndEventsForSelectedDate()
+            }) {
+            }
+            .buttonStyle(BorderlessButtonStyle())
+            .padding(.trailing, 5)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(task.title)
+                        .font(.headline)
+                        .foregroundColor(task.isCompleted ? .gray : .primary)
+                        .strikethrough(task.isCompleted)
+                        .lineLimit(1)
+                    
+                    if task.isFlagged {
+                        Image(systemName: "flag.fill")
+                            .foregroundColor(task.isCompleted ? .gray : .red)
+                            .font(.system(size: 12))
+                    }
+                }
+                
+                Text(task.course)
+                    .font(.subheadline)
+                    .foregroundColor(task.isCompleted ? .gray : .primary)
+                    .strikethrough(task.isCompleted)
+                    .lineLimit(1)
+                
+                if !task.description.isEmpty {
+                    Text(task.description)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(2)
+                }
+                
+                HStack {
+                    Image(systemName: "clock")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    
+                    Text(formatTime(task.dueDate))
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    
+                    if isOverdue(task) {
+                        Text("Overdue")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(4)
+                    }
+                }
+                
+                if let location = task.location, !location.isEmpty {
+                    HStack {
+                        Image(systemName: "mappin.and.ellipse")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        
+                        Text(location)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .padding(.horizontal)
+    }
+    
+    // helper structures
     struct CalendarDay: Identifiable {
         let id: String
         let date: Date?
@@ -223,7 +447,7 @@ struct calendarView: View {
         }
     }
     
-    // helper functions for gathering calendar data
+    // helper functions
     private func getDaysInMonth() -> [CalendarDay] {
         let range = calendar.range(of: .day, in: .month, for: selectedDate) ?? 1..<32
         let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: selectedDate))!
@@ -232,12 +456,12 @@ struct calendarView: View {
         
         var days: [CalendarDay] = []
         
-        // empty cells before first day of month
+        // adding empty cells before first day of month
         for i in 0..<firstWeekday {
             days.append(CalendarDay(date: nil, index: i))
         }
         
-        // days of the month
+        // Days of the month
         for i in 1...totalDaysInMonth {
             let day = calendar.date(byAdding: .day, value: i - 1, to: firstDayOfMonth)
             days.append(CalendarDay(date: day, index: i + firstWeekday))
@@ -251,121 +475,37 @@ struct calendarView: View {
     }
     
     private func tasksOnDate(_ date: Date) -> Bool {
-        // check both active and completed tasks
+        // Check both active and completed tasks
         let allTasks = RemindInfo.tasks + RemindInfo.completedTasks
         return allTasks.contains { calendar.isDate($0.dueDate, inSameDayAs: date) }
-    }
-    
-    private func updateTasksAndEventsForSelectedDate() {
-        eventsForSelectedDate = RemindInfo.events.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
-        tasksForSelectedDate = RemindInfo.tasksForSelectedDate(selectedDate)
-    }
-}
-
-// task row view specifically for calendar view
-struct CalendarTaskRowView: View {
-    let task: remindModel
-    let onToggleComplete: () -> Void
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(task.title)
-                    .font(.headline)
-                    .foregroundColor(task.isCompleted ? .gray : .primary)
-                
-                Text(task.course)
-                    .font(.subheadline)
-                    .foregroundColor(task.isCompleted ? .gray : .primary)
-                
-                Text(task.description)
-                    .font(.caption)
-                    .foregroundColor(task.isCompleted ? .gray : .gray)
-                
-                Text("Due: \(formatTime(task.dueDate))")
-                    .font(.subheadline)
-                    .foregroundColor(task.isCompleted ? .gray : (isOverdue(task) ? .red : .gray))
-                
-                if let location = task.location {
-                    Text("Location: \(location)")
-                        .font(.subheadline)
-                        .foregroundColor(task.isCompleted ? .gray : .gray)
-                }
-            }
-            
-            Spacer()
-            
-            if task.isFlagged {
-                Image(systemName: "flag.fill")
-                    .foregroundColor(task.isCompleted ? .gray : .red)
-            }
-        }
     }
     
     private func isOverdue(_ task: remindModel) -> Bool {
         return !task.isCompleted && task.dueDate < Date()
     }
     
+    private func updateTasksAndEventsForSelectedDate() {
+        eventsForSelectedDate = RemindInfo.events.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
+        tasksForSelectedDate = RemindInfo.tasksForSelectedDate(selectedDate)
+    }
+    
+    // formatting time
     private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: date)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+        return dateFormatter.string(from: date)
     }
 }
 
-// formatting months
+// formatting for dates
 let monthFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "MMMM yyyy"
     return formatter
 }()
 
-// creating the tableView lists for events
-struct EventRowView: View {
-    let event: eventModel
-    @Binding var isDeleting: Bool
-    let onDelete: () -> Void
-    let onEdit: () -> Void
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(event.title)
-                    .font(.headline)
-                
-                Text(event.description)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-                if event.isAllDay {
-                    Text("All-Day")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                } else if let startDate = event.startDate, let endDate = event.endDate {
-                    Text("\(formatTime(startDate)) - \(formatTime(endDate))")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-                
-                if let location = event.location {
-                    Text("Location: \(location)")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-            }
-            
-            Spacer()
-            
-            if event.isFlagged {
-                Image(systemName: "flag.fill")
-                    .foregroundColor(.red)
-            }
-        }
-    }
-    
-    private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: date)
-    }
-}
+let dayFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "EEEE, MMMM d, yyyy"
+    return formatter
+}()

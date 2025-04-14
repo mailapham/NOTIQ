@@ -6,41 +6,57 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
-    @StateObject var RemindInfo = remindInfo()
-    
+    @StateObject private var remindInfoWrapper = RemindInfoLoader()
+    @Environment(\.modelContext) private var modelContext
+
     var body: some View {
-            Text("NOTIQ")
-            .foregroundColor(.gray)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.top, 5)
-            Divider()
-            .padding(.horizontal, 20)
-        TabView {
-            homeView(RemindInfo: RemindInfo)
-                .tabItem {
-                    Label("Alerts", systemImage: "exclamationmark.bubble")
+        Group {
+            if let remindInfo = remindInfoWrapper.instance {
+                VStack {
+                    Text("NOTIQ")
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 5)
+                    Divider()
+                        .padding(.horizontal, 20)
+
+                    TabView {
+                        homeView(RemindInfo: remindInfo)
+                            .tabItem {
+                                Label("Alerts", systemImage: "exclamationmark.bubble")
+                            }
+
+                        remindView(RemindInfo: remindInfo)
+                            .tabItem {
+                                Label("TO-DO", systemImage: "list.bullet")
+                            }
+
+                        calendarView(RemindInfo: remindInfo)
+                            .tabItem {
+                                Label("Calendar", systemImage: "calendar")
+                            }
+
+                        studyView(RemindInfo: remindInfo)
+                            .tabItem {
+                                Label("Study", systemImage: "book")
+                            }
+                    }
+                    .onAppear {
+                        setupAppearance()
+                    }
                 }
-            
-            remindView(RemindInfo: RemindInfo)
-                .tabItem {
-                    Label("TO-DO", systemImage: "list.bullet")
-                }
-            
-           calendarView(RemindInfo: RemindInfo)
-                .tabItem {
-                    Label("Calendar", systemImage: "calendar")
-                }
-            
-            studyView(RemindInfo: RemindInfo)
-                .tabItem {
-                    Label("Study", systemImage: "book")
-                }
+            } else {
+                ProgressView("Loading...")
+            }
         }
-        .onAppear {
-            setupAppearance()
+        .task {
+            if remindInfoWrapper.instance == nil {
+                await remindInfoWrapper.load(using: modelContext)
+            }
         }
     }
     
@@ -76,6 +92,18 @@ struct ContentView: View {
         
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+    }
+}
+
+// loads preadded data
+@MainActor
+class RemindInfoLoader: ObservableObject {
+    @Published var instance: remindInfo?
+
+    func load(using context: ModelContext) {
+        let info = remindInfo(modelContext: context)
+        info.loadData()
+        self.instance = info
     }
 }
 

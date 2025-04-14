@@ -200,7 +200,7 @@ struct addEvent: View {
                 // editing an existing event, populate current fields
                 if let event = eventToEdit {
                     title = event.title
-                    description = event.description
+                    description = event.descriptionText
                     location = event.location ?? ""
                     isFlagged = event.isFlagged
                     isAllDay = event.isAllDay

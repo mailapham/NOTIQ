@@ -174,8 +174,8 @@ struct remindView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                if !task.description.isEmpty {
-                    Text(task.description)
+                if !task.descriptionText.isEmpty {
+                    Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)
@@ -267,8 +267,8 @@ struct remindView: View {
                     .foregroundColor(.gray)
                     .lineLimit(1)
                 
-                if !task.description.isEmpty {
-                    Text(task.description)
+                if !task.descriptionText.isEmpty {
+                    Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)

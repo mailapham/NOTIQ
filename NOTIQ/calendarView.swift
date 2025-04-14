@@ -294,8 +294,8 @@ struct calendarView: View {
                         }
                     }
                     
-                    if !event.description.isEmpty {
-                        Text(event.description)
+                    if !event.descriptionText.isEmpty {
+                        Text(event.descriptionText)
                             .font(.caption)
                             .foregroundColor(.gray)
                             .lineLimit(2)
@@ -392,8 +392,8 @@ struct calendarView: View {
                     .strikethrough(task.isCompleted)
                     .lineLimit(1)
                 
-                if !task.description.isEmpty {
-                    Text(task.description)
+                if !task.descriptionText.isEmpty {
+                    Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)

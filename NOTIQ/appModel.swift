@@ -8,35 +8,40 @@
 import Foundation
 import UIKit
 import SwiftUICore
-// import SwiftData
+import SwiftData
 import MapKit
-
-// struct for reminder functionalities
-struct remindModel: Identifiable, Comparable {
-    let id = UUID()
+// class for reminder functionalities
+@Model
+final class remindModel {
+    var id = UUID()
     var title: String
     var course: String
-    var description: String
+    var descriptionText: String
     var dueDate: Date
     var location: String?
     var address: String?
     var isFlagged: Bool
     var isCompleted: Bool
 
-    // sorting logic - flagged tasks first, then by due date
-    static func < (lhs: remindModel, rhs: remindModel) -> Bool {
-        if lhs.isFlagged != rhs.isFlagged {
-            return lhs.isFlagged
-        }
-        return lhs.dueDate < rhs.dueDate
+    init(title: String, course: String, description: String, dueDate: Date, location: String? = nil, address: String? = nil, isFlagged: Bool = false, isCompleted: Bool = false) {
+        self.id = UUID()
+        self.title = title
+        self.course = course
+        self.descriptionText = description
+        self.dueDate = dueDate
+        self.location = location
+        self.address = address
+        self.isFlagged = isFlagged
+        self.isCompleted = isCompleted
     }
 }
 
-// struct for event functionalities
-struct eventModel: Identifiable, Comparable {
+// class for event functionalities
+@Model
+final class eventModel {
     var id = UUID()
     var title: String
-    var description: String
+    var descriptionText: String
     var date: Date
     var location: String?
     var address: String?
@@ -45,12 +50,17 @@ struct eventModel: Identifiable, Comparable {
     var startDate: Date?
     var endDate: Date?
     
-    // sorting logic - flagged tasks first, then by due date
-    static func < (lhs: eventModel, rhs: eventModel) -> Bool {
-        if lhs.isFlagged != rhs.isFlagged {
-            return lhs.isFlagged
-        }
-        return lhs.date < rhs.date
+    init(title: String, description: String, date: Date, location: String? = nil, address: String? = nil, isFlagged: Bool = false, isAllDay: Bool = false, startDate: Date? = nil, endDate: Date? = nil) {
+        self.id = UUID()
+        self.title = title
+        self.descriptionText = description
+        self.date = date
+        self.location = location
+        self.address = address
+        self.isFlagged = isFlagged
+        self.isAllDay = isAllDay
+        self.startDate = startDate
+        self.endDate = endDate
     }
 }
 

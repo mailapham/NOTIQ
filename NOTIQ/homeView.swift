@@ -88,8 +88,8 @@ struct homeView: View {
         
         var description: String {
             switch self {
-            case .task(let task): return task.description
-            case .event(let event): return event.description
+            case .task(let task): return task.descriptionText
+            case .event(let event): return event.descriptionText
             }
         }
         
@@ -215,8 +215,8 @@ struct homeView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                if !task.description.isEmpty {
-                    Text(task.description)
+                if !task.descriptionText.isEmpty {
+                    Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)
@@ -304,8 +304,8 @@ struct homeView: View {
                     }
                 }
                 
-                if !event.description.isEmpty {
-                    Text(event.description)
+                if !event.descriptionText.isEmpty {
+                    Text(event.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)

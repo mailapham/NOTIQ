@@ -7,12 +7,48 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
+@MainActor
 class remindInfo: ObservableObject {
     @Published var tasks: [remindModel] = []
     @Published var completedTasks: [remindModel] = []
     @Published var events: [eventModel] = []
     @Published var studyPlaces: [studyModel] = []
+    
+    private(set) var modelContext: ModelContext
+    
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        // loadData()
+    }
+    
+    // function loading pre-entered data
+    func loadData() {
+        do {
+            // uncompleted tasks
+            let tasksDescriptor = FetchDescriptor<remindModel>(
+                predicate: #Predicate { $0.isCompleted == false }
+            ) // doesn't contain sorting yet... fix
+            
+            tasks = try modelContext.fetch(tasksDescriptor)
+            
+            // completed tasks
+            let completedTasksDescriptor = FetchDescriptor<remindModel>(
+                predicate: #Predicate { $0.isCompleted == true }
+            )
+            
+            completedTasks = try modelContext.fetch(completedTasksDescriptor)
+            
+            let eventDescriptor = FetchDescriptor<eventModel>()
+            events = try modelContext.fetch(eventDescriptor)
+            
+            /*let studyPlaceDescriptor = FetchDescriptor<studyModel>()
+             studyPlaces = try modelContext.fetch(studyPlaceDescriptor)*/
+        } catch {
+            print("Error loading data: \(error.localizedDescription)")
+        }
+    }
     
     // creates a new task and adds it to the tasks array
     func addTask(title: String, course: String, description: String, dueDate: Date, location: String?, address: String?, isFlagged: Bool) {
@@ -26,67 +62,57 @@ class remindInfo: ObservableObject {
             isFlagged: isFlagged,
             isCompleted: false
         )
-        tasks.append(newTask)
-        sortTasks()
+        modelContext.insert(newTask)
+        saveAndReload()
     }
     
     // removes tasks from tasks and completedTasks by id
     func deleteTask(id: UUID) {
-        tasks.removeAll { $0.id == id }
-        completedTasks.removeAll { $0.id == id }
+        do {
+            try modelContext.delete(model: remindModel.self, where: #Predicate { $0.id == id })
+            saveAndReload()
+        } catch {
+                print("Error deleting task: \(id): \(error.localizedDescription)")
+        }
     }
     
     // updates an existing task if it exists in tasks or completedTasks
     func updateTask(id: UUID, title: String, course: String, description: String, dueDate: Date, location: String?, address: String?, isFlagged: Bool) {
-        if let index = tasks.firstIndex(where: { $0.id == id }) {
-            tasks[index].title = title
-            tasks[index].course = course
-            tasks[index].description = description
-            tasks[index].dueDate = dueDate
-            tasks[index].location = location
-            tasks[index].address = address
-            tasks[index].isFlagged = isFlagged
-            sortTasks()
-        }
-        else if let index = completedTasks.firstIndex(where: { $0.id == id }) {
-            completedTasks[index].title = title
-            completedTasks[index].course = course
-            completedTasks[index].description = description
-            completedTasks[index].dueDate = dueDate
-            completedTasks[index].location = location
-            completedTasks[index].address = address
-            completedTasks[index].isFlagged = isFlagged
-            sortTasks()
+        do {
+            let descriptor = FetchDescriptor<remindModel>(predicate: #Predicate { $0.id == id })
+            if let taskToUpdate = try modelContext.fetch(descriptor).first {
+                taskToUpdate.title = title
+                taskToUpdate.course = course
+                taskToUpdate.descriptionText = description
+                taskToUpdate.dueDate = dueDate
+                taskToUpdate.location = location
+                taskToUpdate.address = address
+                taskToUpdate.isFlagged = isFlagged
+                    
+                saveAndReload()
+                    
+            } else {
+                print("Error updating task: Task with ID \(id) not found.")
+            }
+        } catch {
+            print("Error fetching task \(id) for update: \(error.localizedDescription)")
         }
     }
     
     // moves a task to the completedTasks
     func markTaskAsDone(task: remindModel) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            var updatedTask = tasks[index]
-            updatedTask.isCompleted = true
-            completedTasks.append(updatedTask)
-            tasks.remove(at: index)
-            sortTasks()
-        }
+        guard !task.isCompleted else { return }
+        task.isCompleted = true
+        saveAndReload()
     }
     
     // moves a tasks from completedTasks back to active tasks
     func markTaskAsUndone(task: remindModel) {
-        if let index = completedTasks.firstIndex(where: { $0.id == task.id }) {
-            var updatedTask = completedTasks[index]
-            updatedTask.isCompleted = false
-            tasks.append(updatedTask)
-            completedTasks.remove(at: index)
-            sortTasks()
-        }
+        guard task.isCompleted else { return }
+        task.isCompleted = false
+        saveAndReload()
     }
-    
-    private func sortTasks() {
-        tasks.sort()
-        completedTasks.sort()
-    }
-    
+                                    
     // creates a new event and adds it to the events array
     func addEvent(title: String, description: String, date: Date, location: String?, address: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
         let newEvent = eventModel(
@@ -97,43 +123,54 @@ class remindInfo: ObservableObject {
             address: address,
             isFlagged: isFlagged,
             isAllDay: isAllDay,
-            startDate: startDate,
-            endDate: endDate
+            startDate: isAllDay ? nil : startDate,
+            endDate: isAllDay ? nil : endDate
         )
-        events.append(newEvent)
-        sortEvents()
+        modelContext.insert(newEvent)
+        saveAndReload()
     }
-
-    
+                                    
     // updates an existing event if it exists
     func updateEvent(id: UUID, title: String, description: String, date: Date, location: String?, address: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
-        if let index = events.firstIndex(where: { $0.id == id }) {
-            events[index].title = title
-            events[index].description = description
-            events[index].date = date
-            events[index].location = location
-            events[index].address = address
-            events[index].isFlagged = isFlagged
-            events[index].isAllDay = isAllDay
-            events[index].startDate = startDate
-            events[index].endDate = endDate
-            sortEvents()
+        do {
+            let descriptor = FetchDescriptor<eventModel>(predicate: #Predicate { $0.id == id })
+            if let eventToUpdate = try modelContext.fetch(descriptor).first {
+                eventToUpdate.title = title
+                eventToUpdate.descriptionText = description // Check model property name
+                eventToUpdate.date = date // Update the primary date field
+                eventToUpdate.location = location
+                eventToUpdate.address = address
+                eventToUpdate.isFlagged = isFlagged
+                eventToUpdate.isAllDay = isAllDay
+                eventToUpdate.startDate = isAllDay ? nil : startDate
+                eventToUpdate.endDate = isAllDay ? nil : endDate
+                                                 
+                saveAndReload()
+            } else {
+                print("Error updating event: Event with ID \(id) not found.")
+            }
+        } catch {
+            print("Error fetching event \(id) for update: \(error.localizedDescription)")
         }
     }
 
+    // removes event by id
     func deleteEvent(id: UUID) {
-        events.removeAll { $0.id == id }
-    }
-    
-    private func sortEvents() {
-        events.sort()
+        do {
+            try modelContext.delete(model: eventModel.self, where: #Predicate { $0.id == id })
+            saveAndReload()
+        } catch {
+            print("Error deleting event \(id): \(error.localizedDescription)")
+        }
     }
     
     // filters events based on the selected date
     func eventsForSelectedDate(_ selectedDate: Date) -> [eventModel] {
         let calendar = Calendar.current
         let dayStart = calendar.startOfDay(for: selectedDate)
-        let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else {
+            return []
+        }
         
         return events.filter { event in
             // all-day events: check if the date matches
@@ -220,5 +257,19 @@ class remindInfo: ObservableObject {
     // removes studyPlace by id
     func deleteStudyPlace(id: UUID) {
         studyPlaces.removeAll { $0.id == id }
+    }
+      
+    // save and reload data
+    private func saveAndReload() {
+        saveContext()
+        loadData()
+    }
+    
+    private func saveContext() {
+        do {
+            try modelContext.save()
+        } catch {
+            print("Error saving context: \(error.localizedDescription)")
+        }
     }
 }

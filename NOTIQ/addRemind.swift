@@ -185,7 +185,7 @@ struct addRemind: View {
                 if let task = taskToEdit {
                     title = task.title
                     course = task.course
-                    description = task.description
+                    description = task.descriptionText
                     dueDate = task.dueDate
                     hasDate = true
                     hasTime = true

@@ -243,18 +243,29 @@ struct homeView: View {
                 }
                 
                 if let location = task.location, !location.isEmpty {
-                    HStack {
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
+                            .padding(.top, 1)
                         
-                        Text(location)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                            
+                            if let address = task.address, !address.isEmpty {
+                                Text(address)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(2)
+                            }
+                        }
                     }
                 }
             }
+            .frame(height: 125)
             
             Spacer()
             
@@ -321,18 +332,29 @@ struct homeView: View {
                 }
                 
                 if let location = event.location, !location.isEmpty {
-                    HStack {
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
+                            .padding(.top, 1)
                         
-                        Text(location)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                            
+                            if let address = event.address, !address.isEmpty {
+                                Text(address)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(2)
+                            }
+                        }
                     }
                 }
             }
+            .frame(height: 125)
             
             Spacer()
             

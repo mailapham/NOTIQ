@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct addEvent: View {
     @ObservedObject var RemindInfo: remindInfo
@@ -15,9 +16,15 @@ struct addEvent: View {
     @State private var title = ""
     @State private var description = ""
     @State private var location = ""
+    @State private var address: String? = ""
     @State private var hasLocation = false
     @State private var isFlagged = false
     @State private var isAllDay = false
+    
+    @State private var locationQuery = ""
+    @State private var searchResults: [MKMapItem] = []
+    @State private var selectedMapItem: MKMapItem?
+    @State private var isSearching = false
 
     @State private var startDate = Date()
     @State private var endDate = Date().addingTimeInterval(3600)
@@ -103,9 +110,62 @@ struct addEvent: View {
                             Text("Location")
                         }
                     }
+                    .onChange(of: hasLocation) { _, newValue in
+                        if !newValue {
+                            locationQuery = ""
+                            searchResults = []
+                            selectedMapItem = nil
+                            location = ""
+                        }
+                    }
 
                     if hasLocation {
-                        TextField("Enter Location", text: $location)
+                        TextField("Search for a location", text: $locationQuery)
+                            .onChange(of: locationQuery) { _, newValue in
+                                searchLocations(query: newValue)
+                            }
+
+                        if let selected = selectedMapItem {
+                             HStack {
+                                Text("Selected: \(selected.name ?? "Unknown Location")")
+                                Spacer()
+                                Button {
+                                    selectedMapItem = nil
+                                    locationQuery = ""
+                                    location = ""
+                                    searchResults = []
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                }
+                             }
+                        } else if isSearching {
+                            ProgressView("Searching...")
+                                .padding(.vertical)
+                        } else if !searchResults.isEmpty {
+                            List(searchResults, id: \.self) { item in
+                                VStack(alignment: .leading) {
+                                    Text(item.name ?? "Unknown Name")
+                                        .font(.headline)
+                                    Text(item.placemark.title ?? "")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedMapItem = item
+                                    location = item.name ?? "Unknown Location"
+                                    address = item.placemark.title ?? nil 
+                                    locationQuery = item.name ?? ""
+                                    searchResults = []
+                                }
+                            }
+                             .frame(maxHeight: 200)
+                        } else if !locationQuery.isEmpty && !isSearching {
+                             Text("No results found.")
+                                .foregroundColor(.gray)
+                                .padding(.vertical)
+                        }
                     }
                 }
 
@@ -133,7 +193,7 @@ struct addEvent: View {
                             addEvent()
                         }
                     }
-                    .disabled(title.isEmpty)
+                    .disabled(title.isEmpty || (hasLocation && (address?.isEmpty ?? true)))
                 }
             }
             .onAppear {
@@ -165,6 +225,7 @@ struct addEvent: View {
             description: description,
             date: isAllDay ? startDate : startDate,
             location: hasLocation ? location : nil,
+            address: hasLocation ? address : nil,
             isFlagged: isFlagged,
             isAllDay: isAllDay,
             startDate: isAllDay ? nil : startDate,
@@ -180,11 +241,36 @@ struct addEvent: View {
             description: description,
             date: isAllDay ? startDate : startDate,
             location: hasLocation ? location : nil,
+            address: hasLocation ? address : nil,
             isFlagged: isFlagged,
             isAllDay: isAllDay,
             startDate: isAllDay ? nil : startDate,
             endDate: isAllDay ? nil : endDate
         )
         dismiss()
+    }
+    
+    private func searchLocations(query: String) {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            searchResults = []
+            isSearching = false
+            return
+        }
+
+        isSearching = true
+        searchResults = []
+
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            isSearching = false
+            guard let response = response else {
+                print("Error searching locations: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            searchResults = response.mapItems.filter { $0.name != nil && !$0.name!.isEmpty }
+        }
     }
 }

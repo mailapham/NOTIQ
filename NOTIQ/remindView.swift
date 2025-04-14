@@ -202,18 +202,29 @@ struct remindView: View {
                 }
                 
                 if let location = task.location, !location.isEmpty {
-                    HStack {
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
+                            .padding(.top, 1)
                         
-                        Text(location)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                            
+                            if let address = task.address, !address.isEmpty {
+                                Text(address)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(2)
+                            }
+                        }
                     }
                 }
             }
+            .frame(height: 125)
             
             Spacer()
         }
@@ -223,7 +234,7 @@ struct remindView: View {
         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
         .padding(.horizontal)
     }
-    
+
     // completed task card view
     private func completedTaskCard(task: remindModel) -> some View {
         HStack {
@@ -274,18 +285,29 @@ struct remindView: View {
                 }
                 
                 if let location = task.location, !location.isEmpty {
-                    HStack {
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
+                            .padding(.top, 1)
                         
-                        Text(location)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                            
+                            if let address = task.address, !address.isEmpty {
+                                Text(address)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(2)
+                            }
+                        }
                     }
                 }
             }
+            .frame(height: 125)
             
             Spacer()
         }

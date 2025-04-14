@@ -181,12 +181,10 @@ struct calendarView: View {
                                     .padding(.horizontal)
                                     .padding(.top)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                                            
-                                List {
+                                
+                                LazyVStack {
                                     ForEach(eventsForSelectedDate) { event in
                                         eventCard(event: event)
-                                            .listRowInsets(EdgeInsets())
-                                            .listRowSeparator(.hidden)
                                             .padding(.vertical, 4)
                                             .swipeActions {
                                                 Button(role: .destructive, action: {
@@ -195,19 +193,17 @@ struct calendarView: View {
                                                 }) {
                                                     Label("Delete", systemImage: "trash.fill")
                                                 }
-                                                    Button(action: {
-                                                        eventToEdit = event
-                                                        showingAddEventSheet = true
+                                                Button(action: {
+                                                    eventToEdit = event
+                                                    showingAddEventSheet = true
                                                 }) {
                                                     Label("Edit", systemImage: "pencil")
                                                 }
                                                 .tint(.blue)
                                             }
                                     }
-                                    .listRowBackground(Color.clear)
                                 }
-                                .listStyle(PlainListStyle())
-                                .frame(height: min(CGFloat(eventsForSelectedDate.count) * 120, 300))
+                                .frame(maxWidth: .infinity)
                             }
 
                             // tasks section
@@ -326,18 +322,29 @@ struct calendarView: View {
                     }
                     
                     if let location = event.location, !location.isEmpty {
-                        HStack {
+                        HStack(alignment: .top, spacing: 4) {
                             Image(systemName: "mappin.and.ellipse")
                                 .font(.caption)
                                 .foregroundColor(.gray)
+                                .padding(.top, 1)
                             
-                            Text(location)
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(location)
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(1)
+                                
+                                if let address = event.address, !address.isEmpty {
+                                    Text(address)
+                                        .font(.caption2)
+                                        .foregroundColor(.gray)
+                                        .lineLimit(2)
+                                }
+                            }
                         }
                     }
                 }
+                .frame(height: 125)
                 
                 Spacer()
             }
@@ -347,9 +354,8 @@ struct calendarView: View {
             .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
             .padding(.horizontal)
         }
-        .buttonStyle(PlainButtonStyle())
     }
-    
+
     // task card view
     private func taskCard(task: remindModel) -> some View {
         HStack {
@@ -414,18 +420,29 @@ struct calendarView: View {
                 }
                 
                 if let location = task.location, !location.isEmpty {
-                    HStack {
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
+                            .padding(.top, 1)
                         
-                        Text(location)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                            
+                            if let address = task.address, !address.isEmpty {
+                                Text(address)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(2)
+                            }
+                        }
                     }
                 }
             }
+            .frame(height: 125)
             
             Spacer()
         }

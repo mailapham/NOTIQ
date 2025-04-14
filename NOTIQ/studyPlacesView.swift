@@ -6,13 +6,35 @@
 //
 
 import SwiftUI
+import MapKit
 
-struct studyPlacesView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+struct studyPlaceView: View {
+    let studyPlace: studyModel
+    @State private var region: MKCoordinateRegion
+    
+    init(studyPlace: studyModel) {
+        self.studyPlace = studyPlace
+        self._region = State(initialValue: MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: studyPlace.latitude, longitude: studyPlace.longitude),
+            span: MKCoordinateSpan(latitudeDelta: 0.002, longitudeDelta: 0.002)
+        ))
     }
-}
 
-#Preview {
-    studyPlacesView()
+    var body: some View {
+        VStack {
+            Map(coordinateRegion: $region, annotationItems: [studyPlace]) { place in
+                MapPin(coordinate: CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude), tint: .blue)
+            }
+            .onAppear {
+                self.region = MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: studyPlace.latitude, longitude: studyPlace.longitude),
+                    span: MKCoordinateSpan(latitudeDelta: 0.002, longitudeDelta: 0.002)
+                )
+            }
+            .padding()
+            .border(Color.gray, width: 1)
+        }
+        .navigationTitle(studyPlace.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
 }

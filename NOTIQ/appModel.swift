@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 import SwiftUICore
-// import Firebase
+// import SwiftData
 import MapKit
 
 // struct for reminder functionalities
@@ -19,6 +19,7 @@ struct remindModel: Identifiable, Comparable {
     var description: String
     var dueDate: Date
     var location: String?
+    var address: String?
     var isFlagged: Bool
     var isCompleted: Bool
 
@@ -38,9 +39,10 @@ struct eventModel: Identifiable, Comparable {
     var description: String
     var date: Date
     var location: String?
+    var address: String?
     var isFlagged: Bool
     var isAllDay: Bool
-    var startDate: Date? 
+    var startDate: Date?
     var endDate: Date?
     
     // sorting logic - flagged tasks first, then by due date
@@ -49,6 +51,68 @@ struct eventModel: Identifiable, Comparable {
             return lhs.isFlagged
         }
         return lhs.date < rhs.date
+    }
+}
+
+// structs for study places
+struct studyModel: Identifiable, Codable {
+    var id: UUID
+    let geonameId: Int
+    let name: String
+    let type: String
+    let state: String
+    let country: String
+    let latitude: Double
+    let longitude: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case geonameId
+        case name
+        case type = "fcodeName"
+        case state = "adminCode1"
+        case country = "countryName"
+        case latitude = "lat"
+        case longitude = "lng"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.geonameId = try container.decode(Int.self, forKey: .geonameId)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.type = try container.decode(String.self, forKey: .type)
+        self.state = try container.decode(String.self, forKey: .state)
+        self.country = try container.decode(String.self, forKey: .country)
+        
+        // string to double
+        let latString = try container.decode(String.self, forKey: .latitude)
+        let lngString = try container.decode(String.self, forKey: .longitude)
+        
+        self.latitude = Double(latString) ?? 0.0
+        self.longitude = Double(lngString) ?? 0.0
+    }
+    
+    init(name: String, type: String, state: String, country: String, latitude: Double, longitude: Double) {
+        self.id = UUID()
+        self.geonameId = 0
+        self.name = name
+        self.type = type
+        self.state = state
+        self.country = country
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+
+struct GeoNamesResponse: Codable {
+    let geonames: [studyModel]
+}
+
+
+// make MKMapItem hashable/identifiable
+extension MKMapItem: Identifiable {
+    public var id: String {
+        "\(name ?? "")-\(placemark.coordinate.latitude)-\(placemark.coordinate.longitude)"
     }
 }
 

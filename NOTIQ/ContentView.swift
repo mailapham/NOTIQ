@@ -23,6 +23,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Alerts", systemImage: "exclamationmark.bubble")
                 }
+            
             remindView(RemindInfo: RemindInfo)
                 .tabItem {
                     Label("TO-DO", systemImage: "list.bullet")
@@ -33,13 +34,9 @@ struct ContentView: View {
                     Label("Calendar", systemImage: "calendar")
                 }
             
-            mapView(RemindInfo: RemindInfo)
+            studyView(RemindInfo: RemindInfo)
                 .tabItem {
-                    Label("Navigation", systemImage: "map")
-                }
-            settingView(RemindInfo: RemindInfo)
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
+                    Label("Study", systemImage: "book")
                 }
         }
         .onAppear {

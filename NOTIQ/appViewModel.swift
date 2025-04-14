@@ -12,36 +12,39 @@ class remindInfo: ObservableObject {
     @Published var tasks: [remindModel] = []
     @Published var completedTasks: [remindModel] = []
     @Published var events: [eventModel] = []
-
+    @Published var studyPlaces: [studyModel] = []
+    
     // creates a new task and adds it to the tasks array
-    func addTask(title: String, course: String, description: String, dueDate: Date, location: String?, isFlagged: Bool) {
+    func addTask(title: String, course: String, description: String, dueDate: Date, location: String?, address: String?, isFlagged: Bool) {
         let newTask = remindModel(
             title: title,
             course: course,
             description: description,
             dueDate: dueDate,
             location: location,
+            address: address,
             isFlagged: isFlagged,
             isCompleted: false
         )
         tasks.append(newTask)
         sortTasks()
     }
-
+    
     // removes tasks from tasks and completedTasks by id
     func deleteTask(id: UUID) {
         tasks.removeAll { $0.id == id }
         completedTasks.removeAll { $0.id == id }
     }
-
+    
     // updates an existing task if it exists in tasks or completedTasks
-    func updateTask(id: UUID, title: String, course: String, description: String, dueDate: Date, location: String?, isFlagged: Bool) {
+    func updateTask(id: UUID, title: String, course: String, description: String, dueDate: Date, location: String?, address: String?, isFlagged: Bool) {
         if let index = tasks.firstIndex(where: { $0.id == id }) {
             tasks[index].title = title
             tasks[index].course = course
             tasks[index].description = description
             tasks[index].dueDate = dueDate
             tasks[index].location = location
+            tasks[index].address = address
             tasks[index].isFlagged = isFlagged
             sortTasks()
         }
@@ -51,11 +54,12 @@ class remindInfo: ObservableObject {
             completedTasks[index].description = description
             completedTasks[index].dueDate = dueDate
             completedTasks[index].location = location
+            completedTasks[index].address = address
             completedTasks[index].isFlagged = isFlagged
             sortTasks()
         }
     }
-
+    
     // moves a task to the completedTasks
     func markTaskAsDone(task: remindModel) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
@@ -77,19 +81,20 @@ class remindInfo: ObservableObject {
             sortTasks()
         }
     }
-
+    
     private func sortTasks() {
         tasks.sort()
         completedTasks.sort()
     }
-
+    
     // creates a new event and adds it to the events array
-    func addEvent(title: String, description: String, date: Date, location: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
+    func addEvent(title: String, description: String, date: Date, location: String?, address: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
         let newEvent = eventModel(
             title: title,
             description: description,
             date: date,
             location: location,
+            address: address,
             isFlagged: isFlagged,
             isAllDay: isAllDay,
             startDate: startDate,
@@ -99,13 +104,15 @@ class remindInfo: ObservableObject {
         sortEvents()
     }
 
+    
     // updates an existing event if it exists
-    func updateEvent(id: UUID, title: String, description: String, date: Date, location: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
+    func updateEvent(id: UUID, title: String, description: String, date: Date, location: String?, address: String?, isFlagged: Bool, isAllDay: Bool, startDate: Date?, endDate: Date?) {
         if let index = events.firstIndex(where: { $0.id == id }) {
             events[index].title = title
             events[index].description = description
             events[index].date = date
             events[index].location = location
+            events[index].address = address
             events[index].isFlagged = isFlagged
             events[index].isAllDay = isAllDay
             events[index].startDate = startDate
@@ -117,11 +124,11 @@ class remindInfo: ObservableObject {
     func deleteEvent(id: UUID) {
         events.removeAll { $0.id == id }
     }
-
+    
     private func sortEvents() {
         events.sort()
     }
-
+    
     // filters events based on the selected date
     func eventsForSelectedDate(_ selectedDate: Date) -> [eventModel] {
         let calendar = Calendar.current
@@ -146,5 +153,72 @@ class remindInfo: ObservableObject {
         let calendar = Calendar.current
         let allTasks = tasks + completedTasks
         return allTasks.filter { calendar.isDate($0.dueDate, inSameDayAs: selectedDate) }
+    }
+    
+    // JSON web API call
+    func fetchStudyPlaces() {
+        let urlString = "https://secure.geonames.org/searchJSON?q=library&country=US&adminCode1=AZ&startRow=2&maxRows=12&username=mnpham5"
+        
+        guard let url = URL(string: urlString) else {
+            return
+        }
+    
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Network Error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                return
+            }
+
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Received JSON: \(jsonString)")
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(GeoNamesResponse.self, from: data)
+                DispatchQueue.main.async {
+                    print("Decoded \(result.geonames.count) study places")
+                    self.studyPlaces = result.geonames
+                }
+            } catch {
+                print("Decoding Error: \(error)")
+                if let decodingError = error as? DecodingError {
+                    switch decodingError {
+                    case .typeMismatch(let type, let context):
+                        print("Type mismatch: \(type), path: \(context.codingPath)")
+                    case .valueNotFound(let type, let context):
+                        print("Value not found: \(type), path: \(context.codingPath)")
+                    case .keyNotFound(let key, let context):
+                        print("Key not found: \(key), path: \(context.codingPath)")
+                    case .dataCorrupted(let context):
+                        print("Data corrupted: \(context)")
+                    @unknown default:
+                        print("Unknown decoding error")
+                    }
+                }
+            }
+        }.resume()
+    }
+    
+    // creates a new studyPlace and adds it to the array
+    func addStudyPlace(name: String, type: String, state: String, country: String, latitude: Double, longitude: Double) {
+        let newStudyPlace = studyModel(
+            name: name,
+            type: type,
+            state: state,
+            country: country,
+            latitude: latitude,
+            longitude: longitude
+        )
+        studyPlaces.append(newStudyPlace)
+    }
+
+    // removes studyPlace by id
+    func deleteStudyPlace(id: UUID) {
+        studyPlaces.removeAll { $0.id == id }
     }
 }

@@ -18,95 +18,97 @@ struct remindView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
-                if RemindInfo.tasks.isEmpty && RemindInfo.completedTasks.isEmpty {
-                    // default view for no tasks
-                    VStack(spacing: 20) {
-                        Image(systemName: "checklist")
-                            .font(.system(size: 60))
-                            .foregroundColor(.gray)
-                        
-                        Text("No Tasks")
-                            .font(.title2)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                        
-                        Text("Add tasks to keep track of your to-dos")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .padding()
-                } else {
-                    // uncompleted tasks section
-                    if !RemindInfo.tasks.isEmpty {
-                        Text("Tasks")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.horizontal)
-                            .padding(.top)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        List {
-                            ForEach(RemindInfo.tasks) { task in
-                                taskCard(task: task)
-                                    .listRowInsets(EdgeInsets())
-                                    .listRowSeparator(.hidden)
-                                    .padding(.vertical, 4)
-                                    .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) {
-                                            taskToDelete = task
-                                            showDeleteAlert = true
-                                        } label: {
-                                            Label("Delete", systemImage: "trash.fill")
-                                        }
-                                        
-                                        Button {
-                                            taskToEdit = task
-                                            showingAddTaskSheet = true
-                                        } label: {
-                                            Label("Edit", systemImage: "pencil")
-                                        }
-                                        .tint(.blue)
-                                    }
-                            }
-                            .listRowBackground(Color.clear)
-                        }
-                        .listStyle(PlainListStyle())
-                        .frame(minHeight: 200)
-                    }
-                    
-                    // completed tasks section
-                    if !RemindInfo.completedTasks.isEmpty {
-                        Divider()
-                            .padding(.vertical, 10)
+            ZStack(alignment: .bottomTrailing) {
+                VStack {
+                    if RemindInfo.tasks.isEmpty && RemindInfo.completedTasks.isEmpty {
+                        // default view for no tasks
+                        VStack(spacing: 20) {
+                            Image(systemName: "checklist")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
                             
-                        Text("Completed Tasks")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.horizontal)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        List {
-                            ForEach(RemindInfo.completedTasks) { task in
-                                completedTaskCard(task: task)
-                                    .listRowInsets(EdgeInsets())
-                                    .listRowSeparator(.hidden)
-                                    .padding(.vertical, 4)
-                                    .swipeActions {
-                                        Button(role: .destructive) {
-                                            taskToDelete = task
-                                            showDeleteAlert = true
-                                        } label: {
-                                            Label("Delete", systemImage: "trash.fill")
-                                        }
-                                    }
-                            }
-                            .listRowBackground(Color.clear)
+                            Text("No Tasks")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                            
+                            Text("Add tasks to keep track of your to-dos")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
                         }
-                        .listStyle(PlainListStyle())
-                        .frame(minHeight: 200)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .padding()
+                    } else {
+                        // uncompleted tasks section
+                        if !RemindInfo.tasks.isEmpty {
+                            Text("Tasks")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal)
+                                .padding(.top)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            List {
+                                ForEach(sortedTasks) { task in
+                                    taskCard(task: task)
+                                        .listRowInsets(EdgeInsets())
+                                        .listRowSeparator(.hidden)
+                                        .padding(.vertical, 4)
+                                        .swipeActions(edge: .trailing) {
+                                            Button(role: .destructive) {
+                                                taskToDelete = task
+                                                showDeleteAlert = true
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+                                            
+                                            Button {
+                                                taskToEdit = task
+                                                showingAddTaskSheet = true
+                                            } label: {
+                                                Label("Edit", systemImage: "pencil")
+                                            }
+                                            .tint(.blue)
+                                        }
+                                }
+                                .listRowBackground(Color.clear)
+                            }
+                            .listStyle(PlainListStyle())
+                            .frame(minHeight: 200)
+                        }
+                        
+                        // completed tasks section
+                        if !RemindInfo.completedTasks.isEmpty {
+                            Divider()
+                                .padding(.vertical, 10)
+                            
+                            Text("Completed Tasks")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            List {
+                                ForEach(sortedCompletedTasks) { task in
+                                    completedTaskCard(task: task)
+                                        .listRowInsets(EdgeInsets())
+                                        .listRowSeparator(.hidden)
+                                        .padding(.vertical, 4)
+                                        .swipeActions {
+                                            Button(role: .destructive) {
+                                                taskToDelete = task
+                                                showDeleteAlert = true
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+                                        }
+                                }
+                                .listRowBackground(Color.clear)
+                            }
+                            .listStyle(PlainListStyle())
+                            .frame(minHeight: 200)
+                        }
                     }
                 }
                 
@@ -316,6 +318,26 @@ struct remindView: View {
         .cornerRadius(10)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         .padding(.horizontal)
+    }
+    
+    // uncompleted: flagged -> earliest date
+    private var sortedTasks: [remindModel] {
+        RemindInfo.tasks.sorted {
+            if $0.isFlagged != $1.isFlagged {
+                return $0.isFlagged
+            }
+            return $0.dueDate < $1.dueDate
+        }
+    }
+
+    // completed: flagged -> earliest date
+    private var sortedCompletedTasks: [remindModel] {
+         RemindInfo.completedTasks.sorted {
+            if $0.isFlagged != $1.isFlagged {
+                return $0.isFlagged
+            }
+            return $0.dueDate < $1.dueDate
+        }
     }
     
     // check if task is overdue

@@ -478,7 +478,7 @@ struct calendarView: View {
             days.append(CalendarDay(date: nil, index: i))
         }
         
-        // Days of the month
+        // days of the month
         for i in 1...totalDaysInMonth {
             let day = calendar.date(byAdding: .day, value: i - 1, to: firstDayOfMonth)
             days.append(CalendarDay(date: day, index: i + firstWeekday))
@@ -492,7 +492,7 @@ struct calendarView: View {
     }
     
     private func tasksOnDate(_ date: Date) -> Bool {
-        // Check both active and completed tasks
+        // check both active and completed tasks
         let allTasks = RemindInfo.tasks + RemindInfo.completedTasks
         return allTasks.contains { calendar.isDate($0.dueDate, inSameDayAs: date) }
     }
@@ -501,9 +501,26 @@ struct calendarView: View {
         return !task.isCompleted && task.dueDate < Date()
     }
     
+    // sorting from flagged -> earliest date
     private func updateTasksAndEventsForSelectedDate() {
-        eventsForSelectedDate = RemindInfo.events.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
-        tasksForSelectedDate = RemindInfo.tasksForSelectedDate(selectedDate)
+        let filteredEvents = RemindInfo.events.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
+        let filteredTasks = RemindInfo.tasksForSelectedDate(selectedDate)
+
+        eventsForSelectedDate = filteredEvents.sorted {
+            if $0.isFlagged != $1.isFlagged {
+                return $0.isFlagged
+            }
+            let date1 = $0.startDate ?? $0.date
+            let date2 = $1.startDate ?? $1.date
+            return date1 < date2
+        }
+
+        tasksForSelectedDate = filteredTasks.sorted {
+             if $0.isFlagged != $1.isFlagged {
+                return $0.isFlagged
+            }
+            return $0.dueDate < $1.dueDate
+        }
     }
     
     // formatting time

@@ -23,6 +23,9 @@ struct remindView: View {
                     if RemindInfo.tasks.isEmpty && RemindInfo.completedTasks.isEmpty {
                         // default view for no tasks
                         VStack(spacing: 20) {
+                            Spacer()
+                                .frame(height: 200)
+                            
                             Image(systemName: "checklist")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
@@ -36,20 +39,21 @@ struct remindView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
+                        
+                            Spacer()
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         .padding()
                     } else {
-                        // uncompleted tasks section
-                        if !RemindInfo.tasks.isEmpty {
-                            Text("Tasks")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal)
-                                .padding(.top)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            List {
+                        List {
+                            // uncompleted tasks section
+                            if !RemindInfo.tasks.isEmpty {
+                                Text("Tasks")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .padding(.top, 9)
+                                    .listRowSeparator(.hidden)
+                                
                                 ForEach(sortedTasks) { task in
                                     taskCard(task: task)
                                         .listRowInsets(EdgeInsets())
@@ -71,25 +75,18 @@ struct remindView: View {
                                             }
                                             .tint(.blue)
                                         }
+                                        .listRowBackground(Color.clear)
                                 }
-                                .listRowBackground(Color.clear)
                             }
-                            .listStyle(PlainListStyle())
-                            .frame(minHeight: 200)
-                        }
-                        
-                        // completed tasks section
-                        if !RemindInfo.completedTasks.isEmpty {
-                            Divider()
-                                .padding(.vertical, 10)
                             
-                            Text("Completed Tasks")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            List {
+                            // completed tasks section
+                            if !RemindInfo.completedTasks.isEmpty {
+                                Text("Completed Tasks")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .padding(.top)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
                                 ForEach(sortedCompletedTasks) { task in
                                     completedTaskCard(task: task)
                                         .listRowInsets(EdgeInsets())
@@ -103,15 +100,14 @@ struct remindView: View {
                                                 Label("Delete", systemImage: "trash.fill")
                                             }
                                         }
+                                        .listRowBackground(Color.clear)
                                 }
-                                .listRowBackground(Color.clear)
                             }
-                            .listStyle(PlainListStyle())
-                            .frame(minHeight: 200)
                         }
+                        .listStyle(PlainListStyle())
                     }
                 }
-                
+
                 // add task button
                 HStack {
                     Button(action: {
@@ -316,7 +312,7 @@ struct remindView: View {
         .padding()
         .background(Color.white.opacity(0.8))
         .cornerRadius(10)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
         .padding(.horizontal)
     }
     

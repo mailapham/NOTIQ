@@ -44,6 +44,9 @@ struct homeView: View {
                     // default view for no items scheduled
                     if todaysItems.isEmpty && upcomingItems.isEmpty {
                         VStack(spacing: 20) {
+                            Spacer()
+                                .frame(height: 120)
+                            
                             Image(systemName: "calendar.badge.clock")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
@@ -57,6 +60,8 @@ struct homeView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
+                            
+                            Spacer()
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.top, 100)

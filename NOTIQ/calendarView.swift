@@ -389,7 +389,6 @@ struct calendarView: View {
                 Text(task.course)
                     .font(.subheadline)
                     .foregroundColor(task.isCompleted ? .gray : .primary)
-                    .strikethrough(task.isCompleted)
                     .lineLimit(1)
                 
                 if !task.descriptionText.isEmpty {

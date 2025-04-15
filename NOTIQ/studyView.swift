@@ -30,16 +30,21 @@ struct studyView: View {
                     } else if RemindInfo.studyPlaces.isEmpty {
                         VStack(spacing: 20) {
                             Spacer()
+                                .frame(height: 175)
+                            
                             Image(systemName: "book.closed")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
+                            
                             Text("No Study Places Saved")
                                 .font(.title2)
                                 .foregroundColor(.gray)
+                            
                             Text("Tap '+' to add a new study place")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
+                            
                             Spacer()
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -48,10 +53,9 @@ struct studyView: View {
                         List {
                             ForEach(RemindInfo.studyPlaces) { study in
                                 NavigationLink(destination: studyPlaceView(studyPlace: study)) {
-                                    // Use the new studyPlaceCard view
                                     studyPlaceCard(study: study)
                                 }
-                                .listRowInsets(EdgeInsets()) // Remove default padding
+                                .listRowInsets(EdgeInsets())
                                 .listRowSeparator(.hidden)
                                 .padding(.vertical, 4)
                             }

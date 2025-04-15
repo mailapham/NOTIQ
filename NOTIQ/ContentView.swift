@@ -65,7 +65,7 @@ struct ContentView: View {
         // set navigation bar color
         let navAppearance = UINavigationBarAppearance()
         navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor(hex: "#3C5E95")
+        navAppearance.backgroundColor = UIColor(hex: "#C9D7ED")
         navAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         
         UINavigationBar.appearance().standardAppearance = navAppearance
@@ -74,14 +74,14 @@ struct ContentView: View {
         // set tab bar color
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = UIColor(hex: "#3C5E95")
+        tabBarAppearance.backgroundColor = UIColor(hex: "#C9D7ED")
             
         // customize tab bar item appearance
         let itemAppearance = UITabBarItemAppearance()
             
         // set selected item color (icon and text)
-        itemAppearance.selected.iconColor = UIColor(hex: "#FCD12A")
-        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(hex: "#FCD12A")]
+        itemAppearance.selected.iconColor = UIColor(hex: "#91A7D0")
+        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(hex: "#91A7D0")]
             
         // set unselected item color (icon and text)
         itemAppearance.normal.iconColor = .white

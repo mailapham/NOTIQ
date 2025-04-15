@@ -9,13 +9,14 @@ import SwiftUI
 
 struct remindView: View {
     @ObservedObject var RemindInfo: remindInfo
-    
+
     @State private var isDeleting = false
     @State private var taskToDelete: remindModel?
     @State private var showDeleteAlert = false
     @State private var showingAddTaskSheet = false
     @State private var taskToEdit: remindModel?
-    
+    @State private var editingTask: remindModel?
+
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottomTrailing) {
@@ -25,21 +26,21 @@ struct remindView: View {
                         VStack(spacing: 20) {
                             Spacer()
                                 .frame(height: 200)
-                            
+
                             Image(systemName: "checklist")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
-                            
+
                             Text("No Tasks")
                                 .font(.title2)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
-                            
+
                             Text("Add tasks to keep track of your to-dos")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
-                        
+
                             Spacer()
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -51,9 +52,8 @@ struct remindView: View {
                                 Text("Tasks")
                                     .font(.title2)
                                     .fontWeight(.bold)
-                                    .padding(.top, 9)
                                     .listRowSeparator(.hidden)
-                                
+
                                 ForEach(sortedTasks) { task in
                                     taskCard(task: task)
                                         .listRowInsets(EdgeInsets())
@@ -66,10 +66,9 @@ struct remindView: View {
                                             } label: {
                                                 Label("Delete", systemImage: "trash.fill")
                                             }
-                                            
+
                                             Button {
-                                                taskToEdit = task
-                                                showingAddTaskSheet = true
+                                                editingTask = task
                                             } label: {
                                                 Label("Edit", systemImage: "pencil")
                                             }
@@ -78,7 +77,7 @@ struct remindView: View {
                                         .listRowBackground(Color.clear)
                                 }
                             }
-                            
+
                             // completed tasks section
                             if !RemindInfo.completedTasks.isEmpty {
                                 Text("Completed Tasks")
@@ -86,7 +85,7 @@ struct remindView: View {
                                     .fontWeight(.bold)
                                     .padding(.top)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                
+
                                 ForEach(sortedCompletedTasks) { task in
                                     completedTaskCard(task: task)
                                         .listRowInsets(EdgeInsets())
@@ -107,16 +106,16 @@ struct remindView: View {
                         .listStyle(PlainListStyle())
                     }
                 }
+                .padding(.vertical)
 
                 // add task button
                 HStack {
                     Button(action: {
-                        taskToEdit = nil
                         showingAddTaskSheet = true
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 50))
-                            .foregroundColor(Color(hex: "#3C5E95"))
+                            .foregroundColor(Color(hex: "#91A7D0"))
                             .padding(.vertical)
                     }
                 }
@@ -134,12 +133,14 @@ struct remindView: View {
             }, message: {
                 Text("Are you sure you want to delete this task?")
             })
-            .sheet(isPresented: $showingAddTaskSheet) {
-                addRemind(RemindInfo: RemindInfo, taskToEdit: taskToEdit)
+            .sheet(item: $editingTask) { task in
+                addRemind(RemindInfo: RemindInfo, taskToEdit: task)
             }
-        }
+            .sheet(isPresented: $showingAddTaskSheet) {
+                addRemind(RemindInfo: RemindInfo, taskToEdit: nil)
+            }        }
     }
-    
+
     // uncompleted task card view
     private func taskCard(task: remindModel) -> some View {
         HStack {
@@ -147,47 +148,47 @@ struct remindView: View {
                 RemindInfo.markTaskAsDone(task: task)
             }) {
                 Image(systemName: task.isCompleted ? "circle.fill" : "circle")
-                    .foregroundColor(task.isCompleted ? Color(UIColor(hex: "#FCD12A")) : .gray)
+                    .foregroundColor(task.isCompleted ? Color(UIColor(hex: "#F6CAC9")) : .gray)
                     .font(.system(size: 22))
             }
             .buttonStyle(BorderlessButtonStyle())
             .padding(.trailing, 5)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(task.title)
                         .font(.headline)
                         .foregroundColor(.primary)
                         .lineLimit(1)
-                    
+
                     if task.isFlagged {
                         Image(systemName: "flag.fill")
                             .foregroundColor(.red)
                             .font(.system(size: 12))
                     }
                 }
-                
+
                 Text(task.course)
                     .font(.subheadline)
                     .foregroundColor(.primary)
                     .lineLimit(1)
-                
+
                 if !task.descriptionText.isEmpty {
                     Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)
                 }
-                
+
                 HStack {
                     Image(systemName: "clock")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    
+
                     Text(formatTime(task.dueDate))
                         .font(.caption)
                         .foregroundColor(.gray)
-                    
+
                     if isOverdue(task) {
                         Text("Overdue")
                             .font(.caption)
@@ -198,20 +199,20 @@ struct remindView: View {
                             .cornerRadius(4)
                     }
                 }
-                
+
                 if let location = task.location, !location.isEmpty {
                     HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
                             .padding(.top, 1)
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text(location)
                                 .font(.caption)
                                 .foregroundColor(.gray)
                                 .lineLimit(1)
-                            
+
                             if let address = task.address, !address.isEmpty {
                                 Text(address)
                                     .font(.caption2)
@@ -223,7 +224,7 @@ struct remindView: View {
                 }
             }
             .frame(height: 125)
-            
+
             Spacer()
         }
         .padding()
@@ -240,61 +241,61 @@ struct remindView: View {
                 RemindInfo.markTaskAsUndone(task: task)
             }) {
                 Image(systemName: "circle.fill")
-                    .foregroundColor(Color(UIColor(hex: "#FCD12A")))
+                    .foregroundColor(Color(hex: "#FCD12A").opacity(0.4))
                     .font(.system(size: 22))
             }
             .buttonStyle(BorderlessButtonStyle())
             .padding(.trailing, 5)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(task.title)
                         .font(.headline)
                         .foregroundColor(.gray)
                         .lineLimit(1)
-                    
+
                     if task.isFlagged {
                         Image(systemName: "flag.fill")
                             .foregroundColor(.gray)
                             .font(.system(size: 12))
                     }
                 }
-                
+
                 Text(task.course)
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .lineLimit(1)
-                
+
                 if !task.descriptionText.isEmpty {
                     Text(task.descriptionText)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(2)
                 }
-                
+
                 HStack {
                     Image(systemName: "clock")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    
+
                     Text(formatTime(task.dueDate))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
-                
+
                 if let location = task.location, !location.isEmpty {
                     HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.caption)
                             .foregroundColor(.gray)
                             .padding(.top, 1)
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text(location)
                                 .font(.caption)
                                 .foregroundColor(.gray)
                                 .lineLimit(1)
-                            
+
                             if let address = task.address, !address.isEmpty {
                                 Text(address)
                                     .font(.caption2)
@@ -306,7 +307,7 @@ struct remindView: View {
                 }
             }
             .frame(height: 125)
-            
+
             Spacer()
         }
         .padding()
@@ -315,7 +316,7 @@ struct remindView: View {
         .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
         .padding(.horizontal)
     }
-    
+
     // uncompleted: flagged -> earliest date
     private var sortedTasks: [remindModel] {
         RemindInfo.tasks.sorted {
@@ -328,19 +329,19 @@ struct remindView: View {
 
     // completed: flagged -> earliest date
     private var sortedCompletedTasks: [remindModel] {
-         RemindInfo.completedTasks.sorted {
+        RemindInfo.completedTasks.sorted {
             if $0.isFlagged != $1.isFlagged {
                 return $0.isFlagged
             }
             return $0.dueDate < $1.dueDate
         }
     }
-    
+
     // check if task is overdue
     private func isOverdue(_ task: remindModel) -> Bool {
         return !task.isCompleted && task.dueDate < Date()
     }
-    
+
     // formatting time
     private func formatTime(_ date: Date) -> String {
         let calendar = Calendar.current

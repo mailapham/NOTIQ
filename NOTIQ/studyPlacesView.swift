@@ -23,7 +23,7 @@ struct studyPlaceView: View {
     var body: some View {
         VStack {
             Map(coordinateRegion: $region, annotationItems: [studyPlace]) { place in
-                MapPin(coordinate: CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude), tint: .blue)
+                MapPin(coordinate: CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude), tint: Color(hex: "722F9C").opacity(0.3))
             }
             .onAppear {
                 self.region = MKCoordinateRegion(
@@ -34,6 +34,7 @@ struct studyPlaceView: View {
             .padding()
             .border(Color.gray, width: 1)
         }
+        //.background(Color(hex: "#E4EAF0"))
         .navigationTitle(studyPlace.name)
         .navigationBarTitleDisplayMode(.inline)
     }

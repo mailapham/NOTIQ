@@ -16,14 +16,8 @@ struct studyView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottomTrailing) {
+                //Color(hex: "#E4EAF0").edgesIgnoringSafeArea(.all)
                 VStack {
-                    Text("Your Study Places")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-                        .padding(.top)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
                     if isLoading {
                         ProgressView("Loading study places...")
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -51,6 +45,12 @@ struct studyView: View {
                         .padding()
                     } else {
                         List {
+                            Text("Your Study Places")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .listRowSeparator(.hidden)
+                                //.listRowBackground(Color(hex: "#E4EAF0"))
+                            
                             ForEach(RemindInfo.studyPlaces) { study in
                                 NavigationLink(destination: studyPlaceView(studyPlace: study)) {
                                     studyPlaceCard(study: study)
@@ -65,6 +65,7 @@ struct studyView: View {
                         .listStyle(PlainListStyle())
                     }
                 }
+                .padding(.vertical)
 
                 HStack {
                      Spacer()
@@ -73,7 +74,7 @@ struct studyView: View {
                      }) {
                          Image(systemName: "plus.circle.fill")
                              .font(.system(size: 50))
-                             .foregroundColor(Color(hex: "#3C5E95"))
+                             .foregroundColor(Color(hex: "#91A7D0"))
                              .padding(.trailing)
                              .padding(.bottom)
                      }

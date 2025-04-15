@@ -24,13 +24,12 @@ struct homeView: View {
                         ForEach(todaysItems.indices, id: \.self) { index in
                             itemCard(item: todaysItems[index])
                         }
-                        
-                        Divider()
-                            .padding(.vertical, 10)
                     }
                     
                     // section for "coming up" schedule - 3 days in advance
                     if !upcomingItems.isEmpty {
+                        Divider()
+                        
                         Text("Coming Up")
                             .font(.title2)
                             .fontWeight(.bold)
@@ -69,6 +68,7 @@ struct homeView: View {
                 }
                 .padding(.vertical)
             }
+            //.background(Color(hex: "#E4EAF0"))
         }
     }
     
@@ -204,6 +204,10 @@ struct homeView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
+                    /*Image(systemName: "checklist")
+                        .foregroundColor(Color(hex: "#3C5E95").opacity(0.8))
+                        .font(.system(size: 16))*/
+                    
                     Text(task.title)
                         .font(.headline)
                         .lineLimit(1)
@@ -294,9 +298,9 @@ struct homeView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Image(systemName: "calendar")
-                        .foregroundColor(Color(hex: "#3C5E95"))
-                        .font(.system(size: 16))
+                    /*Image(systemName: "calendar")
+                        .foregroundColor(Color(hex: "#3C5E95").opacity(0.8))
+                        .font(.system(size: 16))*/
                     
                     Text(event.title)
                         .font(.headline)

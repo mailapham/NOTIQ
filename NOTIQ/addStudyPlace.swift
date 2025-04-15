@@ -23,7 +23,7 @@ struct addStudyPlace: View {
     @State private var selectedMapItem: MKMapItem?
     @State private var isSearching = false
 
-    let studyTypes = ["Library", "Cafe", "Park", "University", "Bookstore", "Other"]
+    let studyTypes = ["library", "cafe", "park", "university", "bookstore", "other"]
 
     var isSaveDisabled: Bool {
         selectedMapItem == nil || type.isEmpty || (type == "Other" && customType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

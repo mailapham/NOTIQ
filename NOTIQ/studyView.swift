@@ -15,52 +15,67 @@ struct studyView: View {
 
     var body: some View {
         NavigationView {
-            ZStack {
-                List {
+            ZStack(alignment: .bottomTrailing) {
+                VStack {
+                    Text("Your Study Places")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                        .padding(.top)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
                     if isLoading {
                         ProgressView("Loading study places...")
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     } else if RemindInfo.studyPlaces.isEmpty {
-                        Text("No study places found. Tap + to add a new study place.")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                    } else {
-                        ForEach(RemindInfo.studyPlaces) { study in
-                            NavigationLink(destination: studyPlaceView(studyPlace: study)) {
-                                VStack(alignment: .leading) {
-                                    Text(study.name)
-                                        .font(.headline)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                    Text(study.type)
-                                        .font(.subheadline)
-                                    Text("\(study.state), \(study.country)")
-                                        .font(.caption)
-                                }
-                            }
+                        VStack(spacing: 20) {
+                            Spacer()
+                            Image(systemName: "book.closed")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                            Text("No Study Places Saved")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                            Text("Tap '+' to add a new study place")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                            Spacer()
                         }
-                        .onDelete(perform: deleteStudyPlaces)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
+                    } else {
+                        List {
+                            ForEach(RemindInfo.studyPlaces) { study in
+                                NavigationLink(destination: studyPlaceView(studyPlace: study)) {
+                                    // Use the new studyPlaceCard view
+                                    studyPlaceCard(study: study)
+                                }
+                                .listRowInsets(EdgeInsets()) // Remove default padding
+                                .listRowSeparator(.hidden)
+                                .padding(.vertical, 4)
+                            }
+                            .onDelete(perform: deleteStudyPlaces)
+                            .listRowBackground(Color.clear)
+                        }
+                        .listStyle(PlainListStyle())
                     }
                 }
 
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            showingAddSheet = true
-                        }) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 50))
-                                .foregroundColor(Color(hex: "#3C5E95"))
-                                .padding(.vertical)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                HStack {
+                     Spacer()
+                     Button(action: {
+                         showingAddSheet = true
+                     }) {
+                         Image(systemName: "plus.circle.fill")
+                             .font(.system(size: 50))
+                             .foregroundColor(Color(hex: "#3C5E95"))
+                             .padding(.trailing)
+                             .padding(.bottom)
+                     }
                 }
             }
-
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingAddSheet) {
                 addStudyPlace(RemindInfo: RemindInfo)
             }
@@ -72,6 +87,36 @@ struct studyView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func studyPlaceCard(study: studyModel) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(study.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+
+                Text(study.type)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+
+                Text("\(study.state), \(study.country)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(.vertical, 10)
+
+            Spacer()
+
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .padding(.horizontal)
     }
 
     func deleteStudyPlaces(at offsets: IndexSet) {

@@ -29,22 +29,23 @@ class remindInfo: ObservableObject {
             // uncompleted tasks
             let tasksDescriptor = FetchDescriptor<remindModel>(
                 predicate: #Predicate { $0.isCompleted == false }
-            ) // doesn't contain sorting yet... fix
-            
+            ) 
             tasks = try modelContext.fetch(tasksDescriptor)
             
             // completed tasks
             let completedTasksDescriptor = FetchDescriptor<remindModel>(
                 predicate: #Predicate { $0.isCompleted == true }
             )
-            
             completedTasks = try modelContext.fetch(completedTasksDescriptor)
             
+            // events
             let eventDescriptor = FetchDescriptor<eventModel>()
             events = try modelContext.fetch(eventDescriptor)
             
-            /*let studyPlaceDescriptor = FetchDescriptor<studyModel>()
-             studyPlaces = try modelContext.fetch(studyPlaceDescriptor)*/
+            // study places
+            let studyPlaceDescriptor = FetchDescriptor<studyModel>()
+            studyPlaces = try modelContext.fetch(studyPlaceDescriptor)
+            
         } catch {
             print("Error loading data: \(error.localizedDescription)")
         }
@@ -216,25 +217,42 @@ class remindInfo: ObservableObject {
             }
             
             do {
-                let result = try JSONDecoder().decode(GeoNamesResponse.self, from: data)
+                let result = try JSONDecoder().decode(geonameResponse.self, from: data)
                 DispatchQueue.main.async {
                     print("Decoded \(result.geonames.count) study places")
-                    self.studyPlaces = result.geonames
+                    
+                    for place in result.geonames {
+                        let existingPlaces = self.studyPlaces.filter {
+                            $0.name == place.name &&
+                            $0.latitude == place.latitude &&
+                            $0.longitude == place.longitude }
+                        
+                        if existingPlaces.isEmpty {
+                            self.addStudyPlace(
+                                name: place.name,
+                                type: place.type,
+                                state: place.state,
+                                country: place.country,
+                                latitude: place.latitude,
+                                longitude: place.longitude
+                            )
+                        }
+                    }
                 }
             } catch {
                 print("Decoding Error: \(error)")
                 if let decodingError = error as? DecodingError {
                     switch decodingError {
-                    case .typeMismatch(let type, let context):
-                        print("Type mismatch: \(type), path: \(context.codingPath)")
-                    case .valueNotFound(let type, let context):
-                        print("Value not found: \(type), path: \(context.codingPath)")
-                    case .keyNotFound(let key, let context):
-                        print("Key not found: \(key), path: \(context.codingPath)")
-                    case .dataCorrupted(let context):
-                        print("Data corrupted: \(context)")
-                    @unknown default:
-                        print("Unknown decoding error")
+                        case .typeMismatch(let type, let context):
+                            print("Type mismatch: \(type), path: \(context.codingPath)")
+                        case .valueNotFound(let type, let context):
+                            print("Value not found: \(type), path: \(context.codingPath)")
+                        case .keyNotFound(let key, let context):
+                            print("Key not found: \(key), path: \(context.codingPath)")
+                        case .dataCorrupted(let context):
+                            print("Data corrupted: \(context)")
+                        @unknown default:
+                            print("Unknown decoding error")
                     }
                 }
             }
@@ -251,12 +269,18 @@ class remindInfo: ObservableObject {
             latitude: latitude,
             longitude: longitude
         )
-        studyPlaces.append(newStudyPlace)
+        modelContext.insert(newStudyPlace)
+        saveAndReload()
     }
 
     // removes studyPlace by id
     func deleteStudyPlace(id: UUID) {
-        studyPlaces.removeAll { $0.id == id }
+        do {
+            try modelContext.delete(model: studyModel.self, where: #Predicate { $0.id == id })
+            saveAndReload()
+        } catch {
+            print("Error deleting study place \(id): \(error.localizedDescription)")
+        }
     }
       
     // save and reload data

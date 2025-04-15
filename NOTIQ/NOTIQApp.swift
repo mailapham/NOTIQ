@@ -16,8 +16,8 @@ struct NOTIQApp: App {
         do {
             let schema = Schema([
                 remindModel.self,
-                eventModel.self
-                // studyModel.self
+                eventModel.self,
+                studyModel.self
             ])
             
             let modelConfiguration = ModelConfiguration(
@@ -30,7 +30,7 @@ struct NOTIQApp: App {
                 configurations: [modelConfiguration]
             )
         } catch {
-            fatalError("Coun't create ModelContainer: \(error)")
+            fatalError("Couldn't create ModelContainer: \(error)")
         }
     }
     

@@ -10,6 +10,7 @@ import UIKit
 import SwiftUICore
 import SwiftData
 import MapKit
+
 // class for reminder functionalities
 @Model
 final class remindModel {
@@ -64,9 +65,29 @@ final class eventModel {
     }
 }
 
-// structs for study places
-struct studyModel: Identifiable, Codable {
+// class for study places - user input
+@Model
+final class studyModel {
     var id: UUID
+    var name: String
+    var type: String
+    var state: String
+    var country: String
+    var latitude: Double
+    var longitude: Double
+    
+    init(name: String, type: String, state: String, country: String, latitude: Double, longitude: Double) {
+        self.id = UUID()
+        self.name = name
+        self.type = type
+        self.state = state
+        self.country = country
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+
+struct geonameStudyModel: Codable {
     let geonameId: Int
     let name: String
     let type: String
@@ -87,7 +108,6 @@ struct studyModel: Identifiable, Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = UUID()
         self.geonameId = try container.decode(Int.self, forKey: .geonameId)
         self.name = try container.decode(String.self, forKey: .name)
         self.type = try container.decode(String.self, forKey: .type)
@@ -101,23 +121,11 @@ struct studyModel: Identifiable, Codable {
         self.latitude = Double(latString) ?? 0.0
         self.longitude = Double(lngString) ?? 0.0
     }
-    
-    init(name: String, type: String, state: String, country: String, latitude: Double, longitude: Double) {
-        self.id = UUID()
-        self.geonameId = 0
-        self.name = name
-        self.type = type
-        self.state = state
-        self.country = country
-        self.latitude = latitude
-        self.longitude = longitude
-    }
 }
 
-struct GeoNamesResponse: Codable {
-    let geonames: [studyModel]
+struct geonameResponse: Codable {
+    let geonames: [geonameStudyModel]
 }
-
 
 // make MKMapItem hashable/identifiable
 extension MKMapItem: Identifiable {

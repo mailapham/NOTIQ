@@ -41,7 +41,7 @@ struct addRemind: View {
                     TextField("Description", text: $description)
                 }
                 
-                Section {
+                /*Section {
                     Toggle(isOn: $hasDate) {
                         HStack {
                             Image(systemName: "calendar")
@@ -83,8 +83,11 @@ struct addRemind: View {
                                 .focused($isTimePickerActive)
                         }
                     }
-                }
+                }*/
                 
+                DatePicker("Select Date & Time", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.graphical)
+                                
                 Section {
                     Toggle(isOn: $hasLocation) {
                         HStack {
@@ -178,7 +181,7 @@ struct addRemind: View {
                             addTask()
                         }
                     }
-                    .disabled(title.isEmpty || course.isEmpty || (!hasDate && !hasTime) || (hasLocation && (address?.isEmpty ?? true)))
+                    .disabled(title.isEmpty || course.isEmpty || (hasLocation && (address?.isEmpty ?? true)))
                 }
             }
             .onAppear {

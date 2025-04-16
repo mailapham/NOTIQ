@@ -36,7 +36,7 @@ struct calendarView: View {
     
     var body: some View {
         NavigationView {
-            ZStack(alignment: .bottomTrailing) {
+            VStack {
                 VStack {
                     // calendar header
                     HStack {
@@ -67,6 +67,7 @@ struct calendarView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .padding(.top)
                     
                     // weekday headers
                     HStack {
@@ -81,7 +82,7 @@ struct calendarView: View {
                     .padding(.horizontal)
                     .padding(.top, 3)
                     
-                    // calendar grid
+                    // Calendar grid
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
                         ForEach(getDaysInMonth(), id: \.id) { day in
                             VStack {
@@ -135,23 +136,11 @@ struct calendarView: View {
                         }
                     }
                     .padding([.horizontal, .bottom])
-                    
-                    Divider()
-                    
-                    // selected date header
-                    /*HStack {
-                        VStack(alignment: .leading) {
-                            Text("\(selectedDate, formatter: dayFormatter)")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                            
-                            Text("\(eventsForSelectedDate.count) Events, \(tasksForSelectedDate.count) Tasks")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding()*/
-                    
+                }
+                
+                Divider()
+                
+                ZStack(alignment: .bottomTrailing) {
                     // display events and tasks for selected date
                     if eventsForSelectedDate.isEmpty && tasksForSelectedDate.isEmpty {
                         VStack(spacing: 20) {
@@ -169,10 +158,11 @@ struct calendarView: View {
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
+                            
+                            Spacer()
                         }
-                        .frame(height: 300)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 100)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top)
                     } else {
                         List {
                             // events section
@@ -234,12 +224,8 @@ struct calendarView: View {
                         }
                         .listStyle(PlainListStyle())
                     }
-                }
-                .padding(.vertical)
-                //.background(Color(hex: "#E4EAF0"))
-                
-                // add event button
-                HStack {
+                    
+                    // add event button
                     Button(action: {
                         showingAddEventSheet = true
                     }) {
@@ -248,9 +234,9 @@ struct calendarView: View {
                             .foregroundColor(Color(hex: "#91A7D0"))
                             .padding(.vertical)
                     }
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                .padding(.horizontal)
-                .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .alert("Deleting Event", isPresented:$showDeleteAlert, actions: {

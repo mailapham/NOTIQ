@@ -204,7 +204,7 @@ struct addRemind: View {
             title: title,
             course: course,
             description: description,
-            dueDate: hasDate || hasTime ? dueDate : Date(),
+            dueDate: dueDate,
             location: hasLocation ? location : nil,
             address: hasLocation ? address : nil,
             isFlagged: isFlagged
@@ -218,7 +218,7 @@ struct addRemind: View {
             title: title,
             course: course,
             description: description,
-            dueDate: hasDate || hasTime ? dueDate : Date(),
+            dueDate: dueDate,
             location: hasLocation ? location : nil,
             address: hasLocation ? address : nil,
             isFlagged: isFlagged
